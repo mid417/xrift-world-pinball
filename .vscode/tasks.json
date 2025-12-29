@@ -12,7 +12,7 @@
     {
       "label": "プロダクションビルド & アップロード",
       "type": "shell",
-      "command": "npm run build && xrift upload world",
+      "command": "xrift upload world",
       "group": "build",
       "isBackground": false,
       "problemMatcher": ["$tsc"]
