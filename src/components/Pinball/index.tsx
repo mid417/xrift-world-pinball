@@ -5,7 +5,7 @@ import { Interactable, useInstanceState } from '@xrift/world-components'
 import * as THREE from 'three'
 
 // ボールの初期位置・リスポーン位置
-const BALL_INITIAL_POSITION: [number, number, number] = [1, 1.9, -4]
+const BALL_INITIAL_POSITION: [number, number, number] = [1.5, 1.9, -4]
 // フリッパーの初期角度
 const LEFT_FLIPPER_REST_ANGLE = -Math.PI / 8
 const RIGHT_FLIPPER_REST_ANGLE = Math.PI / 8
@@ -306,11 +306,48 @@ export const Pinball = () => {
       </mesh>
 
       {/* バンパー（得点要素） - 床上に合わせて下げる */}
+      {/* 中央のバンパー */}
       <RigidBody type="fixed" colliders="ball" restitution={2}>
         {/* 半径0.3、床上面1.25+0.1=1.35 → 中心は約1.65 */}
         <mesh position={[0, 1.75, -1.67]} castShadow>
           <sphereGeometry args={[0.3, 32, 32]} />
           <meshStandardMaterial color="#ffaa00" />
+        </mesh>
+      </RigidBody>
+
+      {/* 左のバンパー */}
+      <RigidBody type="fixed" colliders="ball" restitution={2}>
+        <mesh position={[-1.5, 1.75, -1]} castShadow>
+          <sphereGeometry args={[0.3, 32, 32]} />
+          <meshStandardMaterial color="#ff00aa" />
+        </mesh>
+      </RigidBody>
+
+      {/* 右のバンパー */}
+      <RigidBody type="fixed" colliders="ball" restitution={2}>
+        <mesh position={[1.5, 1.75, -1]} castShadow>
+          <sphereGeometry args={[0.3, 32, 32]} />
+          <meshStandardMaterial color="#00aaff" />
+        </mesh>
+      </RigidBody>
+
+      {/* ピン（円柱） */}
+      <RigidBody type="fixed" restitution={1.2}>
+        <mesh position={[0, 1.5, -0.34]} castShadow>
+          <cylinderGeometry args={[0.05, 0.05, 0.4, 16]} />
+          <meshStandardMaterial color="#ffffff" />
+        </mesh>
+      </RigidBody>
+      <RigidBody type="fixed" restitution={1.2}>
+        <mesh position={[-1, 1.4, 1.07]} castShadow>
+          <cylinderGeometry args={[0.05, 0.05, 0.4, 16]} />
+          <meshStandardMaterial color="#ffffff" />
+        </mesh>
+      </RigidBody>
+      <RigidBody type="fixed" restitution={1.2}>
+        <mesh position={[1, 1.4, 1.07]} castShadow>
+          <cylinderGeometry args={[0.05, 0.05, 0.4, 16]} />
+          <meshStandardMaterial color="#ffffff" />
         </mesh>
       </RigidBody>
     </group>
