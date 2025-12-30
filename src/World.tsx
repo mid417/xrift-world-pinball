@@ -3,6 +3,7 @@ import { useRef } from 'react'
 import { Mesh } from 'three'
 import { COLORS, WORLD_CONFIG } from './constants'
 import { Skybox } from '@xrift/world-components'
+import { Pinball } from './components/Pinball'
 
 export interface WorldProps {
     position?: [number, number, number]
@@ -43,12 +44,15 @@ export const World: React.FC<WorldProps> = ({ position = [0, 0, 0], scale = 1 })
             </RigidBody>
 
             {/* 箱 */}
-            <RigidBody type="fixed" colliders="hull" restitution={0} friction={0}>
+            {/* <RigidBody type="fixed" colliders="hull" restitution={0} friction={0}>
                 <mesh position={[0 * scale, 1 * scale, -10 * scale]} castShadow>
                 <boxGeometry args={[2 * scale, 2 * scale, 2 * scale]} />
                 <meshLambertMaterial color={COLORS.decorations.box} />
                 </mesh>
-            </RigidBody>
+            </RigidBody> */}
+
+            {/* ピンボールゲーム */}
+            <Pinball />
         </group>
     )
 }
