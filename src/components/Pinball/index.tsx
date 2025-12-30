@@ -1,7 +1,8 @@
-import { RigidBody, RapierRigidBody } from '@react-three/rapier'
-import { useRef, useEffect } from 'react'
+import { RigidBody, RapierRigidBody, CollisionEnterPayload } from '@react-three/rapier'
+import { useRef, useEffect, useCallback } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Interactable, useInstanceState } from '@xrift/world-components'
+import { Text } from '@react-three/drei'
 import * as THREE from 'three'
 
 // ボールの初期位置・リスポーン位置
@@ -20,6 +21,7 @@ interface PinballState {
   leftFlipperRotation: number
   rightFlipperRotation: number
   score: number
+  highScore: number
   ballOwnerId: string | null // ボールの物理演算を担当するユーザーID
   lastUpdateTime: number
 }
@@ -40,6 +42,7 @@ export const Pinball = () => {
     leftFlipperRotation: LEFT_FLIPPER_REST_ANGLE,
     rightFlipperRotation: RIGHT_FLIPPER_REST_ANGLE,
     score: 0,
+    highScore: 0,
     ballOwnerId: null,
     lastUpdateTime: Date.now(),
   })
@@ -102,6 +105,8 @@ export const Pinball = () => {
           ballOwnerId: null,
           ballPosition: BALL_INITIAL_POSITION,
           ballVelocity: [0, 0, 0],
+          highScore: Math.max(prev.highScore, prev.score),
+          score: 0,
         }))
       }
     }
@@ -187,12 +192,23 @@ export const Pinball = () => {
     }, 200)
   }
 
+  // バンパー衝突時の得点加算
+  const handleBumperCollision = useCallback((payload: CollisionEnterPayload) => {
+    // ボールとの衝突かチェック
+    if (payload.other.rigidBody === ballRef.current) {
+      setGameState(prev => ({
+        ...prev,
+        score: prev.score + 10,
+      }))
+    }
+  }, [setGameState])
+
   return (
     <group position={[0, 0, -4]}>
       {/* 背面の壁（奥） - 高さを半分に */}
       <RigidBody type="fixed" colliders="cuboid">
         <mesh position={[0, 1.25, -3]} receiveShadow castShadow>
-          <boxGeometry args={[6, 2.5, 0.2]} />
+          <boxGeometry args={[6.2, 2.5, 0.2]} />
           <meshStandardMaterial color="#d8d8d8" />
         </mesh>
       </RigidBody>
@@ -207,7 +223,7 @@ export const Pinball = () => {
 
       {/* 右の壁 - 高さを半分に */}
       <RigidBody type="fixed" colliders="cuboid">
-        <mesh position={[3, 1.25, 0]} receiveShadow castShadow>
+        <mesh position={[3, 1.25, 0]} receiveShadow castShadow rotation={[0, 0, 0]}>
           <boxGeometry args={[0.2, 2.5, 6]} />
           <meshStandardMaterial color="#d8d8d8" />
         </mesh>
@@ -223,13 +239,13 @@ export const Pinball = () => {
 
       {/* ボールのガイド */}
       <RigidBody type="fixed" colliders="cuboid">
-        <mesh position={[-2.34, 0.99, 1.31]} rotation={[0.19198621771937618, 0.6283185307179586, 8.576944553888227e-18]} receiveShadow castShadow>
+        <mesh position={[-2.34, 1.13, 1.31]} rotation={[0.10964441825743065, 0.6180337108716685, -0.12814659942182008]} receiveShadow castShadow>
           <boxGeometry args={[0.2, 1, 2]} />
           <meshStandardMaterial color="#d8d8d8" />
         </mesh>
       </RigidBody>
       <RigidBody type="fixed" colliders="cuboid">
-        <mesh position={[2.38, 1, 1.32]} rotation={[0.20943951023931962, -0.6283185307179586, 0]} receiveShadow castShadow>
+        <mesh position={[2.38, 1.14, 1.32]} rotation={[0.2677553479636554, -0.6706048290467975, 0.040752410946728844]} receiveShadow castShadow>
           <boxGeometry args={[0.2, 1, 2]} />
           <meshStandardMaterial color="#d8d8d8" />
         </mesh>
@@ -299,15 +315,40 @@ export const Pinball = () => {
         </RigidBody>
       </Interactable>
 
-      {/* スコア表示（3Dテキストの代わりに簡易表示） - 壁の高さに追従 */}
-      <mesh position={[0, 2.6, -2.9]}>
-        <boxGeometry args={[2, 0.5, 0.1]} />
-        <meshStandardMaterial color="#ffaa00" />
-      </mesh>
+      {/* スコア表示 */}
+      <group position={[0, 2.6, -2.85]}>
+        {/* スコアボード背景 */}
+        <mesh position={[0, 0, -0.08]}>
+          <boxGeometry args={[2.5, 0.8, 0.1]} />
+          <meshStandardMaterial color="#222222" />
+        </mesh>
+        {/* 現在のスコア */}
+        <Text
+          position={[0, 0.15, 0]}
+          fontSize={0.25}
+          color="#ffaa00"
+          anchorX="center"
+          anchorY="middle"
+          font={undefined}
+        >
+          {`SCORE: ${gameState.score}`}
+        </Text>
+        {/* ハイスコア */}
+        <Text
+          position={[0, -0.2, 0]}
+          fontSize={0.15}
+          color="#00ffaa"
+          anchorX="center"
+          anchorY="middle"
+          font={undefined}
+        >
+          {`HIGH: ${gameState.highScore}`}
+        </Text>
+      </group>
 
       {/* バンパー（得点要素） - 床上に合わせて下げる */}
       {/* 中央のバンパー */}
-      <RigidBody type="fixed" colliders="ball" restitution={2}>
+      <RigidBody type="fixed" colliders="ball" restitution={2} onCollisionEnter={handleBumperCollision}>
         {/* 半径0.3、床上面1.25+0.1=1.35 → 中心は約1.65 */}
         <mesh position={[0, 1.75, -1.67]} castShadow>
           <sphereGeometry args={[0.3, 32, 32]} />
@@ -316,16 +357,16 @@ export const Pinball = () => {
       </RigidBody>
 
       {/* 左のバンパー */}
-      <RigidBody type="fixed" colliders="ball" restitution={2}>
-        <mesh position={[-1.5, 1.75, -1]} castShadow>
+      <RigidBody type="fixed" colliders="ball" restitution={2} onCollisionEnter={handleBumperCollision}>
+        <mesh position={[-1.5, 1.65, -1]} castShadow>
           <sphereGeometry args={[0.3, 32, 32]} />
           <meshStandardMaterial color="#ff00aa" />
         </mesh>
       </RigidBody>
 
       {/* 右のバンパー */}
-      <RigidBody type="fixed" colliders="ball" restitution={2}>
-        <mesh position={[1.5, 1.75, -1]} castShadow>
+      <RigidBody type="fixed" colliders="ball" restitution={2} onCollisionEnter={handleBumperCollision}>
+        <mesh position={[1.5, 1.65, -1]} castShadow>
           <sphereGeometry args={[0.3, 32, 32]} />
           <meshStandardMaterial color="#00aaff" />
         </mesh>
