@@ -308,7 +308,7 @@ export const Pinball = () => {
           position={[1.5, 1.4, 2.5]}
           rotation={[0, -Math.PI / 8, 0]}
         >
-          <mesh castShadow position={[-0.36, -0.220000047683716, -0.0000911925470123975]}>
+          <mesh castShadow position={[-0.36, -0.220000047683716, -0.0001]}>
             <boxGeometry args={[1.2, 0.2, 0.4]} />
             <meshStandardMaterial color="#3366ff" />
           </mesh>
