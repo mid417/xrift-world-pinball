@@ -1,0 +1,22 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "world"
+    },
+    {
+      "path": "../xrift-docs",
+      "name": "docs"
+    },
+    {
+      "path": "../xrift-world-components",
+      "name": "word-components"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/dist": true
+    }
+  }
+}
